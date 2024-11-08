@@ -22,4 +22,3 @@ class Shipment(BaseModel):
     modeOfShipment: str
     customerCareCalls: int
     customerRating: int
-    reachedOnTime: int
