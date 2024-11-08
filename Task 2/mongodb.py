@@ -50,11 +50,10 @@ orders_schema = {
 shipments_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["warehouseBlock", "modeOfShipment", "reachedOnTime"],
+        "required": ["warehouseBlock", "modeOfShipment"],
         "properties": {
             "warehouseBlock": {"bsonType": "string", "enum": ["A", "B", "C", "D", "E"], "description": "Warehouse block must be one of 'A', 'B', 'C', 'D', or 'E'"},
             "modeOfShipment": {"bsonType": "string", "enum": ["Ship", "Flight", "Road"], "description": "Mode of shipment must be 'Ship', 'Flight', or 'Road'"},
-            "reachedOnTime": {"bsonType": "int", "enum": [0, 1], "description": "Reached on time must be 0 (on time) or 1 (not on time)"}
         }
     }
 }
