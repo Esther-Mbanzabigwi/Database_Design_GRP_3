@@ -1,99 +1,64 @@
 import requests
-import joblib
-import numpy as np
+import pickle
 import pandas as pd
+import numpy as np
 
-# Load the saved model and scaler
-model = joblib.load("model.pkl")
-scaler = joblib.load("scaler.pkl")
+# Load the scaler and model from pickle files
+with open("scaler.pkl", "rb") as scaler_file:
+    scaler = pickle.load(scaler_file)
 
-# API endpoint URLs
-BASE_URL = "https://databases-assignment-g3.onrender.com"
-CUSTOMER_API_URL = f"{BASE_URL}/customers/latest"
-PRODUCT_API_URL = f"{BASE_URL}/products/latest"
-ORDER_API_URL = f"{BASE_URL}/orders/latest"
-SHIPMENT_API_URL = f"{BASE_URL}/shipments/latest"
+with open("model.pkl", "rb") as model_file:
+    model = pickle.load(model_file)
 
-# Fetch the latest entries from the API
-def fetch_latest_data():
+# Function to fetch the latest data from the API
+def fetch_latest_data(api_url):
     try:
-        customer_data = requests.get(CUSTOMER_API_URL).json()
-        product_data = requests.get(PRODUCT_API_URL).json()
-        order_data = requests.get(ORDER_API_URL).json()
-        shipment_data = requests.get(SHIPMENT_API_URL).json()
-        
-        return customer_data, product_data, order_data, shipment_data
-    except Exception as e:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        print("Fetched data:", data)  # Print the raw data for inspection
+        return data
+    except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
-        return None, None, None, None
+        return None
 
-# Prepare data for prediction based on dataset columns
-def prepare_data(customer_data, product_data, order_data, shipment_data):
-    # Encoding categorical features (get dummies)
-    block_encoding = {"A": "warehouseBlock_A", "B": "warehouseBlock_B", "C": "warehouseBlock_C", "D": "warehouseBlock_D", "F": "warehouseBlock_F"}
-    mode_encoding = {"Ship": "modeOfShipment_Ship", "Flight": "modeOfShipment_Flight", "Road": "modeOfShipment_Road"}
-    importance_encoding = {"low": "productImportance_low", "medium": "productImportance_medium", "high": "productImportance_high"}
-    gender_encoding = {"Male": "gender_Male", "Female": "gender_Female"}
+# Preprocess the data for prediction
+def prepare_data_for_prediction(raw_data):
+    # Convert raw data to DataFrame
+    df = pd.DataFrame([raw_data])
 
-    # Create a DataFrame for the input data
-    input_data = {
-        "warehouseBlock": block_encoding.get(shipment_data.get("warehouseBlock", "A")),
-        "modeOfShipment": mode_encoding.get(shipment_data.get("modeOfShipment", "Ship")),
-        "customerCareCalls": shipment_data.get("customerCareCalls", 0),
-        "customerRating": shipment_data.get("customerRating", 0),
-        "costOfTheProduct": product_data.get("cost", 0),
-        "priorPurchases": customer_data.get("priorPurchases", 0),
-        "productImportance": importance_encoding.get(product_data.get("productImportance", "low")),
-        "gender": gender_encoding.get(customer_data.get("gender", "Male")),
-        "discountOffered": order_data.get("discountOffered", 0),
-        "weightInGms": product_data.get("weightInGms", 0)
-    }
+    # Map categorical variables to numerical values
+    df['Warehouse_block'] = df['Warehouse_block'].map({'A': 0, 'B': 1, 'C': 2, 'D': 3, 'F': 4})
+    df['Mode_of_Shipment'] = df['Mode_of_Shipment'].map({'Flight': 0, 'Ship': 1, 'Road': 2})
+    df['Product_importance'] = df['Product_importance'].map({'low': 0, 'medium': 1, 'high': 2})
+    df['Gender'] = df['Gender'].map({'M': 0, 'F': 1})
 
-    # Convert input data to a DataFrame
-    df = pd.DataFrame([input_data])
+    # Define the expected columns and fill missing ones with a default value (e.g., 0)
+    expected_columns = ['Warehouse_block', 'Mode_of_Shipment', 'Customer_care_calls', 
+                        'Customer_rating', 'Cost_of_the_Product', 'Prior_purchases', 
+                        'Product_importance', 'Gender', 'Discount_offered', 'Weight_in_gms']
+    df = df.reindex(columns=expected_columns, fill_value=0)
 
-    # Apply one-hot encoding (get dummies)
-    df = pd.get_dummies(df)
-
-    # Ensure the DataFrame has all the required columns (add missing dummy columns as zeros)
-    expected_columns = [
-        "customerCareCalls", "customerRating", "costOfTheProduct", "priorPurchases",
-        "discountOffered", "weightInGms",
-        "warehouseBlock_A", "warehouseBlock_B", "warehouseBlock_C", "warehouseBlock_D", "warehouseBlock_F",
-        "modeOfShipment_Ship", "modeOfShipment_Flight", "modeOfShipment_Road",
-        "productImportance_low", "productImportance_medium", "productImportance_high",
-        "gender_Male", "gender_Female"
-    ]
-    for col in expected_columns:
-        if col not in df.columns:
-            df[col] = 0
-
-    # Reorder columns to match the expected input format
-    df = df[expected_columns]
-
-    # Scale the data using the loaded scaler
+    # Scale the data
     scaled_data = scaler.transform(df)
-
     return scaled_data
 
-# Make prediction using the model
-def make_prediction(data):
-    prediction = model.predict(data)
-    return prediction[0]
+# Make prediction
+def make_prediction(preprocessed_data):
+    prediction = model.predict(preprocessed_data)
+    return prediction
 
-# Main function
-if __name__ == "_main_":
-    # Fetch data from the live API
-    customer_data, product_data, order_data, shipment_data = fetch_latest_data()
+# Main script
+if __name__ == "__main__":
+    api_url = 'https://databases-assignment-g3.onrender.com/customers/672e5ce9e093adcf1fdf5a34'
+    raw_data = fetch_latest_data(api_url)
 
-    if None in [customer_data, product_data, order_data, shipment_data]:
-        print("Failed to fetch data. Please check the API endpoints.")
+    if raw_data:
+        try:
+            preprocessed_data = prepare_data_for_prediction(raw_data)
+            prediction = make_prediction(preprocessed_data)
+            print(f"Prediction: {prediction[0]}")
+        except Exception as e:
+            print(f"Error during prediction: {e}")
     else:
-        # Prepare input data for prediction
-        input_data = prepare_data(customer_data, product_data, order_data, shipment_data)
-        
-        # Make a prediction
-        prediction = make_prediction(input_data)
-        
-        # Display the prediction result
-        print("Predicted Value:", prediction)
+        print("No data to process.")
