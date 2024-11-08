@@ -8,8 +8,8 @@ dataset = pd.read_csv(data)
 print(dataset)
 
 # Connecting to MongoDB
-client = MongoClient("mongodb://localhost:27017/")
-db = client["shipping_data"] 
+client = MongoClient("mongodb://atlas-sql-672bcdc5aee49224a042282e-chn0e.a.query.mongodb.net/shipping_dataset?ssl=true&authSource=admin")
+db = client["shipping_dataset"] 
 
 customers_collection = db["Customers"]
 products_collection = db["Products"]
