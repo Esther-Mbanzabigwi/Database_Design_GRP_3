@@ -14,14 +14,10 @@ class Product(BaseModel):
 
 # Order model
 class Order(BaseModel):
-    customerId: str
-    orderDate: str
     discountOffered: float
-    productId: str
 
 # Shipment model
 class Shipment(BaseModel):
-    orderId: str
     warehouseBlock: str
     modeOfShipment: str
     customerCareCalls: int
