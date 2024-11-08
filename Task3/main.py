@@ -7,7 +7,7 @@ app = FastAPI()
 
 # Helper function to serialize MongoDB document
 def serialize_doc(doc):
-    doc['_id'] = str(doc['_id'])
+    doc["_id"] = str(doc["_id"])
     return doc
 
 # CRUD for Customers
@@ -45,7 +45,12 @@ async def delete_customer(customer_id: str):
 # CRUD for Products
 @app.post("/products/")
 async def create_product(product: Product):
-    result = products_collection.insert_one(product.dict())
+    product_dict = product.dict()
+    if "_id" not in product_dict:
+        product_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        product_dict["_id"] = str(product_dict["_id"])  # Ensure _id is a string
+    result = products_collection.insert_one(product_dict)
     return {"inserted_id": str(result.inserted_id)}
 
 @app.get("/products/{product_id}")
