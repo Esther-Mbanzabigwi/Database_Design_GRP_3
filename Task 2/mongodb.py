@@ -15,7 +15,7 @@ print(dataset)
 customers_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["_id", "gender", "priorPurchases"],
+        "required": ["gender", "priorPurchases"],
         "properties": {
             "_id": {"bsonType": "string", "description": "CustomerID must be a string"},
             "gender": {"bsonType": "string", "enum": ["Male", "Female"], "description": "Gender must be either 'Male' or 'Female'"},
