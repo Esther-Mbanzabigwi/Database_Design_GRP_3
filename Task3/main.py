@@ -77,7 +77,12 @@ async def delete_product(product_id: str):
 # CRUD for Orders
 @app.post("/orders/")
 async def create_order(order: Order):
-    result = orders_collection.insert_one(order.dict())
+    order_dict = order.dict()
+    if "_id" not in order_dict:
+        order_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        order_dict["_id"] = str(order_dict["_id"])  # Ensure _id is a string
+    result = orders_collection.insert_one(order_dict)
     return {"inserted_id": str(result.inserted_id)}
 
 @app.get("/orders/{order_id}")
@@ -104,7 +109,12 @@ async def delete_order(order_id: str):
 # CRUD for Shipments
 @app.post("/shipments/")
 async def create_shipment(shipment: Shipment):
-    result = shipments_collection.insert_one(shipment.dict())
+    shipment_dict = shipment.dict()
+    if "_id" not in shipment_dict:
+        shipment_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        shipment_dict["_id"] = str(shipment_dict["_id"])  # Ensure _id is a string
+    result = shipments_collection.insert_one(shipment_dict)
     return {"inserted_id": str(result.inserted_id)}
 
 @app.get("/shipments/{shipment_id}")
