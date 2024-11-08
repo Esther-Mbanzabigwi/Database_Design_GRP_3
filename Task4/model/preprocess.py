@@ -1,61 +1,47 @@
-import numpy as np
+import requests
+import pickle
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
+import numpy as np
 
-# Initialize scaler and encoder
-scaler = StandardScaler()
-encoder = OneHotEncoder(handle_unknown="ignore")
+# Load the trained model and scaler
+with open('model.pkl', 'rb') as model_file:
+    model = pickle.load(model_file)
 
-# Specify which columns are numerical and which are categorical
-numerical_features = ["feature1", "feature2"]  # Replace with actual numerical feature names
-categorical_features = ["feature3"]  # Replace with actual categorical feature names
+with open('scaler.pkl', 'rb') as scaler_file:
+    scaler = pickle.load(scaler_file)
 
-# Define a preprocessing pipeline for numerical and categorical features
-preprocessor = ColumnTransformer(
-    transformers=[
-        ("num", scaler, numerical_features),
-        ("cat", encoder, categorical_features)
-    ]
-)
+# Function to fetch the latest data from the API
+def fetch_latest_data(api_url):
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data: {e}")
+        return None
 
-def preprocess_data(data):
-    """
-    Preprocess incoming data to match the model's input requirements.
+# Prepare data for prediction
+def prepare_data_for_prediction(raw_data):
+    # Convert raw data to a DataFrame (adjust as needed)
+    df = pd.DataFrame([raw_data])
     
-    Parameters:
-    data (dict): The data to preprocess (this could come from the API in the future).
-    
-    Returns:
-    numpy.ndarray: Preprocessed data ready for model prediction.
-    """
-    # Convert data to DataFrame
-    df = pd.DataFrame([data])
-    
-    # Check for missing values and fill them (e.g., with median for numerical, "unknown" for categorical)
-    for col in numerical_features:
-        if df[col].isnull().any():
-            df[col].fillna(df[col].median(), inplace=True)
-    
-    for col in categorical_features:
-        if df[col].isnull().any():
-            df[col].fillna("unknown", inplace=True)
-    
-    # Apply transformations using the preprocessing pipeline
-    df_preprocessed = preprocessor.fit_transform(df)  # Use transform only if pipeline has been pre-fitted
-    
-    return df_preprocessed
-if __name__ == "__main__":
-    # Sample dummy data that matches the model's expected input format
-    dummy_data = {
-    "feature1": 2.0,
-    "feature2": 5.3,
-    "feature3": 1.5  # Add 'feature3' if the model expects it
-}
+    # Ensure the input data matches the model's expected format
+    processed_data = scaler.transform(df)
+    return processed_data
 
-    
-    # Test preprocessing
-    preprocessed_data = preprocess_data(dummy_data)
-    print("Preprocessed Data:", preprocessed_data)
+# Make prediction
+def predict(data):
+    prediction = model.predict(data)
+    return prediction
 
+# Replace 'your_api_endpoint_here' with the actual API URL
+api_url = 'https://databases-assignment-g3.onrender.com/docs'
+raw_data = fetch_latest_data(api_url)
+
+if raw_data:
+    processed_data = prepare_data_for_prediction(raw_data)
+    prediction = predict(processed_data)
+    print(f"Prediction: {prediction}")
+else:
+    print("No data to process.")
