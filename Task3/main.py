@@ -11,7 +11,7 @@ def serialize_doc(doc):
     return doc
 
 # CRUD for Customers
-@app.post("/create_customer/")
+@app.post("/customers/")
 async def create_customer(customer: Customer):
     customer_dict = customer.dict()
     if "_id" not in customer_dict:
