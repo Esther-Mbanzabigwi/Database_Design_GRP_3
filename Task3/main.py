@@ -11,9 +11,14 @@ def serialize_doc(doc):
     return doc
 
 # CRUD for Customers
-@app.post("/customers/")
+@app.post("/create_customer/")
 async def create_customer(customer: Customer):
-    result = customers_collection.insert_one(customer.dict())
+    customer_dict = customer.dict()
+    if "_id" not in customer_dict:
+        customer_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        customer_dict["_id"] = str(customer_dict["_id"])  # Ensure _id is a string
+    result = customers_collection.insert_one(customer_dict)
     return {"inserted_id": str(result.inserted_id)}
 
 @app.get("/customers/{customer_id}")

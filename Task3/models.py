@@ -3,20 +3,20 @@ from typing import Optional
 
 # Customer model
 class Customer(BaseModel):
-    _id: Optional[str]
+    #_id: str
     gender: str
     priorPurchases: int
 
 # Product model
 class Product(BaseModel):
-    _id: Optional[str]
+    #_id: str
     cost: float
     productImportance: str
     weightInGms: float
 
 # Order model
 class Order(BaseModel):
-    _id: Optional[str]
+    #_id: str
     customerId: str
     orderDate: str
     discountOffered: float
@@ -24,7 +24,7 @@ class Order(BaseModel):
 
 # Shipment model
 class Shipment(BaseModel):
-    _id: Optional[str]
+    #_id: str
     orderId: str
     warehouseBlock: str
     modeOfShipment: str
