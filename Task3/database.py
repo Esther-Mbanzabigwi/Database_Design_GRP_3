@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 # MongoDB connection
 client = MongoClient("mongodb://mongo:ZNzVzoQnwpZLkrgrDPoBrflPCpHZAsCq@junction.proxy.rlwy.net:43226")
-db = client["shipping_data"]
+db = client["shipping_dataset"]
 
 # Collections
 customers_collection = db["Customers"]
