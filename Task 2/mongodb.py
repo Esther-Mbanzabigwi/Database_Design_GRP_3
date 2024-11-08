@@ -17,7 +17,7 @@ customers_schema = {
         "bsonType": "object",
         "required": ["gender", "priorPurchases"],
         "properties": {
-            "_id": {"bsonType": "string", "description": "CustomerID must be a string"},
+            # "_id": {"bsonType": "string", "description": "CustomerID must be a string"},
             "gender": {"bsonType": "string", "enum": ["Male", "Female"], "description": "Gender must be either 'Male' or 'Female'"},
             "priorPurchases": {"bsonType": "int", "minimum": 0, "description": "Prior Purchases must be a non-negative integer"}
         }
