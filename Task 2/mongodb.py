@@ -2,7 +2,7 @@ import pandas as pd
 from pymongo import MongoClient
 
 # Connecting to MongoDB
-client = MongoClient("mongodb://mongo:ZNzVzoQnwpZLkrgrDPoBrflPCpHZAsCq@junction.proxy.rlwy.net:43226")
+client = MongoClient("mongodb://mongo:zfSFgCrMDHfrJMBomgixOpvbCGtgDxbG@junction.proxy.rlwy.net:17558")
 db = client["shipping_dataset"]
 
 import os
