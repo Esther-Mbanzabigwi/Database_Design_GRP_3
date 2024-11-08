@@ -1,6 +1,3 @@
-Here's a draft for your README file:
-
----
 
 # 📚 Database Assignment 📚
 
