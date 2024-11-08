@@ -2,7 +2,7 @@ import pandas as pd
 from pymongo import MongoClient
 
 # Connecting to MongoDB
-client = MongoClient("mongodb://mongo:zfSFgCrMDHfrJMBomgixOpvbCGtgDxbG@junction.proxy.rlwy.net:17558")
+client = MongoClient("mongodb://mongo:ZNzVzoQnwpZLkrgrDPoBrflPCpHZAsCq@junction.proxy.rlwy.net:17558")
 db = client["shipping_dataset"]
 
 import os
@@ -15,10 +15,12 @@ print(dataset)
 customers_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["gender", "priorPurchases"],
+        "required": ["gender", "priorPurchases", "customerCareCalls", "customerRating",],
         "properties": {
             "gender": {"bsonType": "string", "enum": ["Male", "Female"], "description": "Gender must be either 'Male' or 'Female'"},
-            "priorPurchases": {"bsonType": "int", "minimum": 0, "description": "Prior Purchases must be a non-negative integer"}
+            "priorPurchases": {"bsonType": "int", "minimum": 0, "description": "Prior Purchases must be a non-negative integer"},
+            "customerCareCalls": {"bsonType": "int", "minimum": 0, "description": "Customer care calls must be a non-negative integer"},
+            "customerRating": {"bsonType": "int", "minimum": 1, "maximum": 5, "description": "Customer rating must be between 1 and 5"},
         }
     }
 }
@@ -26,7 +28,7 @@ customers_schema = {
 products_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["_id", "cost", "productImportance", "weightInGms"],
+        "required": ["cost", "productImportance", "weightInGms"],
         "properties": {
             "cost": {"bsonType": "double", "minimum": 0, "description": "Cost must be a non-negative number"},
             "productImportance": {"bsonType": "string", "enum": ["low", "medium", "high"], "description": "Product Importance must be 'low', 'medium', or 'high'"},
@@ -38,12 +40,9 @@ products_schema = {
 orders_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["_id", "customerId", "orderDate", "discountOffered", "productId"],
+        "required": ["discountOffered"],
         "properties": {
-            "customerId": {"bsonType": "string", "description": "CustomerID must be a string"},
-            "orderDate": {"bsonType": "string", "description": "Order date must be a string (ISO date format recommended)"},
             "discountOffered": {"bsonType": "double", "minimum": 0, "description": "Discount must be a non-negative number"},
-            "productId": {"bsonType": "string", "description": "ProductID must be a string"}
         }
     }
 }
@@ -51,13 +50,10 @@ orders_schema = {
 shipments_schema = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["_id", "orderId", "warehouseBlock", "modeOfShipment", "customerCareCalls", "customerRating", "reachedOnTime"],
+        "required": ["warehouseBlock", "modeOfShipment", "reachedOnTime"],
         "properties": {
-            "orderId": {"bsonType": "string", "description": "OrderID must be a string"},
             "warehouseBlock": {"bsonType": "string", "enum": ["A", "B", "C", "D", "E"], "description": "Warehouse block must be one of 'A', 'B', 'C', 'D', or 'E'"},
             "modeOfShipment": {"bsonType": "string", "enum": ["Ship", "Flight", "Road"], "description": "Mode of shipment must be 'Ship', 'Flight', or 'Road'"},
-            "customerCareCalls": {"bsonType": "int", "minimum": 0, "description": "Customer care calls must be a non-negative integer"},
-            "customerRating": {"bsonType": "int", "minimum": 1, "maximum": 5, "description": "Customer rating must be between 1 and 5"},
             "reachedOnTime": {"bsonType": "int", "enum": [0, 1], "description": "Reached on time must be 0 (on time) or 1 (not on time)"}
         }
     }
