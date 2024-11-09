@@ -9,3 +9,5 @@ customers_collection = db["Customers"]
 products_collection = db["Products"]
 orders_collection = db["Orders"]
 shipments_collection = db["Shipments"]
+
+

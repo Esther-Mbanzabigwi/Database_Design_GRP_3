@@ -2,21 +2,22 @@ from fastapi import FastAPI, HTTPException
 from models import Customer, Product, Order, Shipment
 from database import customers_collection, products_collection, orders_collection, shipments_collection
 from bson import ObjectId
-from pymongo import DESCENDING
 
 app = FastAPI()
 
 # Helper function to serialize MongoDB document
 def serialize_doc(doc):
-    if doc:
-        doc["_id"] = str(doc["_id"])
+    doc["_id"] = str(doc["_id"])
     return doc
 
 # CRUD for Customers
 @app.post("/customers/")
 async def create_customer(customer: Customer):
     customer_dict = customer.dict()
-    customer_dict["_id"] = str(ObjectId())  # Generate a new ObjectId
+    if "_id" not in customer_dict:
+        customer_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        customer_dict["_id"] = str(customer_dict["_id"])  # Ensure _id is a string
     result = customers_collection.insert_one(customer_dict)
     return {"inserted_id": str(result.inserted_id)}
 
@@ -41,20 +42,14 @@ async def delete_customer(customer_id: str):
         return {"message": "Customer deleted successfully"}
     raise HTTPException(status_code=404, detail="Customer not found")
 
-# Endpoint to get the latest customer entry
-@app.get("/customers/latest")
-async def get_latest_customer():
-    latest_customer = customers_collection.find().sort("_id", DESCENDING).limit(1)
-    latest_customer = list(latest_customer)
-    if latest_customer:
-        return serialize_doc(latest_customer[0])
-    raise HTTPException(status_code=404, detail="No customer data found")
-
 # CRUD for Products
 @app.post("/products/")
 async def create_product(product: Product):
     product_dict = product.dict()
-    product_dict["_id"] = str(ObjectId())
+    if "_id" not in product_dict:
+        product_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        product_dict["_id"] = str(product_dict["_id"])  # Ensure _id is a string
     result = products_collection.insert_one(product_dict)
     return {"inserted_id": str(result.inserted_id)}
 
@@ -79,20 +74,14 @@ async def delete_product(product_id: str):
         return {"message": "Product deleted successfully"}
     raise HTTPException(status_code=404, detail="Product not found")
 
-# Endpoint to get the latest product entry
-@app.get("/products/latest")
-async def get_latest_product():
-    latest_product = products_collection.find().sort("_id", DESCENDING).limit(1)
-    latest_product = list(latest_product)
-    if latest_product:
-        return serialize_doc(latest_product[0])
-    raise HTTPException(status_code=404, detail="No product data found")
-
 # CRUD for Orders
 @app.post("/orders/")
 async def create_order(order: Order):
     order_dict = order.dict()
-    order_dict["_id"] = str(ObjectId())
+    if "_id" not in order_dict:
+        order_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        order_dict["_id"] = str(order_dict["_id"])  # Ensure _id is a string
     result = orders_collection.insert_one(order_dict)
     return {"inserted_id": str(result.inserted_id)}
 
@@ -117,20 +106,14 @@ async def delete_order(order_id: str):
         return {"message": "Order deleted successfully"}
     raise HTTPException(status_code=404, detail="Order not found")
 
-# Endpoint to get the latest order entry
-@app.get("/orders/latest")
-async def get_latest_order():
-    latest_order = orders_collection.find().sort("_id", DESCENDING).limit(1)
-    latest_order = list(latest_order)
-    if latest_order:
-        return serialize_doc(latest_order[0])
-    raise HTTPException(status_code=404, detail="No order data found")
-
 # CRUD for Shipments
 @app.post("/shipments/")
 async def create_shipment(shipment: Shipment):
     shipment_dict = shipment.dict()
-    shipment_dict["_id"] = str(ObjectId())
+    if "_id" not in shipment_dict:
+        shipment_dict["_id"] = str(ObjectId())  # Generate a new ObjectId if not provided
+    else:
+        shipment_dict["_id"] = str(shipment_dict["_id"])  # Ensure _id is a string
     result = shipments_collection.insert_one(shipment_dict)
     return {"inserted_id": str(result.inserted_id)}
 
@@ -154,12 +137,3 @@ async def delete_shipment(shipment_id: str):
     if result.deleted_count:
         return {"message": "Shipment deleted successfully"}
     raise HTTPException(status_code=404, detail="Shipment not found")
-
-# Endpoint to get the latest shipment entry
-@app.get("/shipments/latest")
-async def get_latest_shipment():
-    latest_shipment = shipments_collection.find().sort("_id", DESCENDING).limit(1)
-    latest_shipment = list(latest_shipment)
-    if latest_shipment:
-        return serialize_doc(latest_shipment[0])
-    raise HTTPException(status_code=404, detail="No shipment data found")

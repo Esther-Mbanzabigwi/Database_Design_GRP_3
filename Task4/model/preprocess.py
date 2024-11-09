@@ -26,7 +26,7 @@ def fetch_latest_data(api_url):
 def prepare_data_for_prediction(raw_data):
     # Convert raw data to DataFrame
     df = pd.DataFrame([raw_data])
-
+    print
     # Map categorical variables to numerical values
     df['Warehouse_block'] = df['Warehouse_block'].map({'A': 0, 'B': 1, 'C': 2, 'D': 3, 'F': 4})
     df['Mode_of_Shipment'] = df['Mode_of_Shipment'].map({'Flight': 0, 'Ship': 1, 'Road': 2})
@@ -50,15 +50,44 @@ def make_prediction(preprocessed_data):
 
 # Main script
 if __name__ == "__main__":
-    api_url = 'https://databases-assignment-g3.onrender.com/customers/672e5ce9e093adcf1fdf5a34'
-    raw_data = fetch_latest_data(api_url)
+    
+    BASE_URL = "https://databases-assignment-g3.onrender.com"
+    CUSTOMER_API_URL = f"{BASE_URL}/customers/672e5ce9e093adcf1fdf5a34"
+    PRODUCT_API_URL = f"{BASE_URL}/products/672e50f83adbbd4da61312d3"
+    ORDER_API_URL = f"{BASE_URL}/orders/672e766cab5bba0d23c1c457"
+    SHIPMENT_API_URL = f"{BASE_URL}/shipments/672e60fdd6b38d4b079aa9b3"
 
-    if raw_data:
-        try:
-            preprocessed_data = prepare_data_for_prediction(raw_data)
-            prediction = make_prediction(preprocessed_data)
-            print(f"Prediction: {prediction[0]}")
-        except Exception as e:
-            print(f"Error during prediction: {e}")
-    else:
-        print("No data to process.")
+    # raw_data = fetch_latest_data(api_url)
+
+    # if raw_data:
+    #     try:
+    #         preprocessed_data = prepare_data_for_prediction(raw_data)
+    #         # prediction = make_prediction(preprocessed_data)
+    #         # print(f"Prediction: {prediction[0]}")
+    #         print(raw_data)
+    #     except Exception as e:
+    #         print(f"Error during prediction: {e}")
+    # else:
+    #     print("No data to process.")
+    Customer_data=fetch_latest_data(CUSTOMER_API_URL)
+    product_data=fetch_latest_data(PRODUCT_API_URL)
+    order_data=fetch_latest_data(ORDER_API_URL)
+    shipment_data=fetch_latest_data(SHIPMENT_API_URL)
+
+    data = {
+        'Warehouse_block': shipment_data.get('warehouseBlock', 'A'),  # Default to 'A' if missing
+        'Mode_of_Shipment': shipment_data.get('modeOfShipment', 'Flight'),  # Default to 'Flight' if missing
+        'Customer_care_calls': shipment_data.get('customerCareCalls', 0),
+        'Customer_rating': shipment_data.get('customerRating', 0),
+        'Cost_of_the_Product': product_data.get('cost', 0.0),
+        'Prior_purchases': Customer_data.get('priorPurchases', 0),
+        'Product_importance': product_data.get('productImportance', 'low'),  # Default to 'low' if missing
+        'Gender': 'M' if Customer_data.get('gender', 'Male') == 'Male' else 'F',
+        'Discount_offered': order_data.get('discountOffered', 0.0),
+        'Weight_in_gms': product_data.get('weightInGms', 0.0)
+    }
+    df = pd.DataFrame([data])
+
+    preprocessed_data = prepare_data_for_prediction(df)
+    prediction = make_prediction(preprocessed_data)
+    print(f"Prediction: {prediction[0]}")
