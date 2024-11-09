@@ -1,14 +1,11 @@
 import requests
-import pickle
-import pandas as pd
+from keras.models import load_model
 import numpy as np
 
-# Load the scaler and model from pickle files
-with open("scaler.pkl", "rb") as scaler_file:
-    scaler = pickle.load(scaler_file)
 
-with open("model.pkl", "rb") as model_file:
-    model = pickle.load(model_file)
+# # load model
+model = load_model("model.keras")
+
 
 # Function to fetch the latest data from the API
 def fetch_latest_data(api_url):
@@ -16,78 +13,75 @@ def fetch_latest_data(api_url):
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
-        print("Fetched data:", data)  # Print the raw data for inspection
+        print("Fetched data:", data)
         return data
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data: {e}")
         return None
 
-# Preprocess the data for prediction
-def prepare_data_for_prediction(raw_data):
-    # Convert raw data to DataFrame
-    df = pd.DataFrame([raw_data])
-    print
-    # Map categorical variables to numerical values
-    df['Warehouse_block'] = df['Warehouse_block'].map({'A': 0, 'B': 1, 'C': 2, 'D': 3, 'F': 4})
-    df['Mode_of_Shipment'] = df['Mode_of_Shipment'].map({'Flight': 0, 'Ship': 1, 'Road': 2})
-    df['Product_importance'] = df['Product_importance'].map({'low': 0, 'medium': 1, 'high': 2})
-    df['Gender'] = df['Gender'].map({'M': 0, 'F': 1})
 
-    # Define the expected columns and fill missing ones with a default value (e.g., 0)
-    expected_columns = ['Warehouse_block', 'Mode_of_Shipment', 'Customer_care_calls', 
-                        'Customer_rating', 'Cost_of_the_Product', 'Prior_purchases', 
-                        'Product_importance', 'Gender', 'Discount_offered', 'Weight_in_gms']
-    df = df.reindex(columns=expected_columns, fill_value=0)
+def preprocess_data(customer_data, product_data, order_data, shipment_data):
+    # Mapping for categorical variables
+    warehouse_block_map = {3: "D", 4: "F", 0: "A", 1: "B", 2: "C"}
+    mode_of_shipment_map = {0: "Flight", 2: "Ship", 1: "Road"}
+    product_importance_map = {1: "low", 2: "medium", 0: "high"}
+    gender_map = {0: "F", 1: "M"}
 
-    # Scale the data
-    scaled_data = scaler.transform(df)
-    return scaled_data
+    # Reverse mappings for encoding
+    warehouse_block_reverse_map = {v: k for k, v in warehouse_block_map.items()}
+    mode_of_shipment_reverse_map = {v: k for k, v in mode_of_shipment_map.items()}
+    product_importance_reverse_map = {v: k for k, v in product_importance_map.items()}
+    gender_reverse_map = {"Female": 0, "Male": 1}
 
-# Make prediction
+    # Extract features and preprocess them in the correct order
+    preprocessed_data = [
+        # Shipment data
+        warehouse_block_reverse_map.get(
+            shipment_data["warehouseBlock"], 0
+        ),  # Encode warehouse block
+        mode_of_shipment_reverse_map.get(
+            shipment_data["modeOfShipment"], 0
+        ),  # Encode mode of shipment
+        shipment_data.get("customerCareCalls", 0),
+        shipment_data.get("customerRating", 0),
+        # Product data
+        product_data.get("cost", 0.0),
+        # Customer data
+        customer_data.get("priorPurchases", 0),
+        product_importance_reverse_map.get(
+            product_data["productImportance"].lower(), 1
+        ),  # Encode product importance
+        gender_reverse_map.get(customer_data["gender"], 0),
+        # Order data
+        order_data.get("discountOffered", 0.0),
+        product_data.get("weightInGms", 0.0),
+    ]
+
+    # Return the preprocessed data in the required order
+    return preprocessed_data
+
+
 def make_prediction(preprocessed_data):
     prediction = model.predict(preprocessed_data)
     return prediction
 
-# Main script
+
 if __name__ == "__main__":
-    
     BASE_URL = "https://databases-assignment-g3.onrender.com"
     CUSTOMER_API_URL = f"{BASE_URL}/customers/672e5ce9e093adcf1fdf5a34"
     PRODUCT_API_URL = f"{BASE_URL}/products/672e50f83adbbd4da61312d3"
     ORDER_API_URL = f"{BASE_URL}/orders/672e766cab5bba0d23c1c457"
     SHIPMENT_API_URL = f"{BASE_URL}/shipments/672e60fdd6b38d4b079aa9b3"
 
-    # raw_data = fetch_latest_data(api_url)
+    customer_data = fetch_latest_data(CUSTOMER_API_URL)
+    product_data = fetch_latest_data(PRODUCT_API_URL)
+    order_data = fetch_latest_data(ORDER_API_URL)
+    shipment_data = fetch_latest_data(SHIPMENT_API_URL)
 
-    # if raw_data:
-    #     try:
-    #         preprocessed_data = prepare_data_for_prediction(raw_data)
-    #         # prediction = make_prediction(preprocessed_data)
-    #         # print(f"Prediction: {prediction[0]}")
-    #         print(raw_data)
-    #     except Exception as e:
-    #         print(f"Error during prediction: {e}")
-    # else:
-    #     print("No data to process.")
-    Customer_data=fetch_latest_data(CUSTOMER_API_URL)
-    product_data=fetch_latest_data(PRODUCT_API_URL)
-    order_data=fetch_latest_data(ORDER_API_URL)
-    shipment_data=fetch_latest_data(SHIPMENT_API_URL)
-
-    data = {
-        'Warehouse_block': shipment_data.get('warehouseBlock', 'A'),  # Default to 'A' if missing
-        'Mode_of_Shipment': shipment_data.get('modeOfShipment', 'Flight'),  # Default to 'Flight' if missing
-        'Customer_care_calls': shipment_data.get('customerCareCalls', 0),
-        'Customer_rating': shipment_data.get('customerRating', 0),
-        'Cost_of_the_Product': product_data.get('cost', 0.0),
-        'Prior_purchases': Customer_data.get('priorPurchases', 0),
-        'Product_importance': product_data.get('productImportance', 'low'),  # Default to 'low' if missing
-        'Gender': 'M' if Customer_data.get('gender', 'Male') == 'Male' else 'F',
-        'Discount_offered': order_data.get('discountOffered', 0.0),
-        'Weight_in_gms': product_data.get('weightInGms', 0.0)
-    }
-    df = pd.DataFrame([data])
-
-    preprocessed_data = prepare_data_for_prediction(df)
-    prediction = make_prediction(preprocessed_data)
-    print(f"Prediction: {prediction[0]}")
+    if customer_data and product_data and order_data and shipment_data:
+        preprocessed_data = preprocess_data(
+            customer_data, product_data, order_data, shipment_data
+        )
+        prediction = make_prediction(np.array([preprocessed_data]))
+        prediction = 0 if prediction < 0.5 else 1
+        print("Prediction:", prediction)
