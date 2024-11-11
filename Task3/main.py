@@ -150,7 +150,7 @@ async def get_latest_products():
 
 @app.get("/order/latest")
 async def get_latest_orders():
-    latest_orders = orders_collection.find().sort([("_id", -1)]).limit()
+    latest_orders = orders_collection.find().sort([("_id", -1)]).limit(1)
     return [serialize_doc(order) for order in latest_orders]
 
 @app.get("/shipment/latest")
