@@ -68,10 +68,10 @@ def make_prediction(preprocessed_data):
 
 if __name__ == "__main__":
     BASE_URL = "https://databases-assignment-g3.onrender.com"
-    CUSTOMER_API_URL = f"{BASE_URL}/customers/672e5ce9e093adcf1fdf5a34"
-    PRODUCT_API_URL = f"{BASE_URL}/products/672e50f83adbbd4da61312d3"
-    ORDER_API_URL = f"{BASE_URL}/orders/672e766cab5bba0d23c1c457"
-    SHIPMENT_API_URL = f"{BASE_URL}/shipments/672e60fdd6b38d4b079aa9b3"
+    CUSTOMER_API_URL = f"{BASE_URL}/customers/latest"
+    PRODUCT_API_URL = f"{BASE_URL}/products/latest"
+    ORDER_API_URL = f"{BASE_URL}/orders/latest"
+    SHIPMENT_API_URL = f"{BASE_URL}/shipments/latest"
 
     customer_data = fetch_latest_data(CUSTOMER_API_URL)
     product_data = fetch_latest_data(PRODUCT_API_URL)

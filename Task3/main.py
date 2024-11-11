@@ -138,24 +138,24 @@ async def delete_shipment(shipment_id: str):
         return {"message": "Shipment deleted successfully"}
     raise HTTPException(status_code=404, detail="Shipment not found")
 
-@app.get("/customers/latest")
+@app.get("/customer/latest")
 async def get_latest_customers():
-    latest_customers = customers_collection.find().sort([("_id", -1)]).limit(5)  # Example: getting the latest 5 customers
+    latest_customers = customers_collection.find().sort([("_id", -1)]).limit(1)  
     return [serialize_doc(customer) for customer in latest_customers]
 
-@app.get("/products/latest")
+@app.get("/product/latest")
 async def get_latest_products():
-    latest_products = products_collection.find().sort([("_id", -1)]).limit(5)
+    latest_products = products_collection.find().sort([("_id", -1)]).limit(1)
     return [serialize_doc(product) for product in latest_products]
 
-@app.get("/orders/latest")
+@app.get("/order/latest")
 async def get_latest_orders():
-    latest_orders = orders_collection.find().sort([("_id", -1)]).limit(5)
+    latest_orders = orders_collection.find().sort([("_id", -1)]).limit()
     return [serialize_doc(order) for order in latest_orders]
 
-@app.get("/shipments/latest")
+@app.get("/shipment/latest")
 async def get_latest_shipments():
-    latest_shipments = shipments_collection.find().sort([("_id", -1)]).limit(5)
+    latest_shipments = shipments_collection.find().sort([("_id", -1)]).limit()
     return [serialize_doc(shipment) for shipment in latest_shipments]
 
 
